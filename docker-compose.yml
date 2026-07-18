@@ -30,6 +30,34 @@ services:
       - minio_data:/data
     networks:
       - data_eng_network
+
+  api-extractor:
+    build:
+      context: ./src/extractor
+    container_name: api_extractor_data_eng
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      FOOTBALL_DATA_API_TOKEN: ${FOOTBALL_DATA_API_TOKEN}
+    depends_on:
+      - minio
+    networks:
+      - data_eng_network
+
+  
+  csv-extractor:
+    build:
+      context: ./src/extract
+    container_name: csv_extractor_data_eng
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    depends_on:
+      - minio
+    networks:
+      - data_eng_network
     
 
 volumes:
