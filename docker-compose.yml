@@ -48,7 +48,7 @@ services:
   
   csv-extractor:
     build:
-      context: ./src/extract
+      context: ./src/csv_extractor
     container_name: csv_extractor_data_eng
     environment:
       MINIO_ENDPOINT: minio:9000
@@ -56,6 +56,26 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     depends_on:
       - minio
+    networks:
+      - data_eng_network
+
+  loader:
+    build:
+      context: ./src/loader
+    container_name: loader_data_eng
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    depends_on:
+      - minio
+      - postgres
     networks:
       - data_eng_network
     

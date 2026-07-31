@@ -8,7 +8,9 @@ all:
 	@if [ ! -f ./secrets/db_password.txt ]; then \
 		echo $(POSTGRES_DB) > ./secrets/db_password.txt; \
 	fi
-	$(DOCKER_COMPOSE) up
+	$(DOCKER_COMPOSE) up -d postgres minio
+	$(DOCKER_COMPOSE) build api-extractor
+	$(DOCKER_COMPOSE) run --rm api-extractor
 
 clean:
 	$(DOCKER_COMPOSE) down
