@@ -3,6 +3,7 @@ import logging
 import time
 import os
 from datetime import datetime, timezone
+from minio_client import get_minio_client, ensure_bucket_exist, upload_json
 
 MAX_RETRIES = 3
 BASE_URL = "https://api.football-data.org/v4"
@@ -13,7 +14,7 @@ SECONDS_BETWEEN_CALLS = 6
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 def get_api_content(url: str, token: str):
 
@@ -27,7 +28,7 @@ def get_api_content(url: str, token: str):
             return response.json()
         if (response.status_code == 429):
             waiting_time = int(response.headers.get("Retry-After", 60))
-            log.warning("Rate limit atingido, aguardadndo %ds. tentativas(%d/%d)", waiting_time, i, MAX_RETRIES)
+            logger.warning("Rate limit atingido, aguardadndo %ds. tentativas(%d/%d)", waiting_time, i, MAX_RETRIES)
             time.sleep(waiting_time)
             continue
 
@@ -38,16 +39,25 @@ def get_api_content(url: str, token: str):
 
 def run():
     token = os.environ["FOOTBALL_DATA_API_TOKEN"]
-    ingested_at = datetime.now(timezone.utc()).strftime("%Y-%m-%d")
+    ingested_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    client = get_minio_client()
+    ensure_bucket_exist(client, BUCKET)
 
     for season in SEASONS:
 
-        log.info("extraindo a época %d...", season)
+        logger.info("extraindo a época %d...", season)
+
         matches = get_api_content(f"{BASE_URL}/competitions/{COMPETITION}/matches?season={season}", token)
+        upload_json(client, BUCKET, f"/api-football-data/matches/season={season}/ingested_at={ingested_at}/matches.json", matches)
 
-    
+        time.sleep(SECONDS_BETWEEN_CALLS)
 
+        teams = get_api_content(f"{BASE_URL}/competitions/{COMPETITION}/teams?season={season}", token)
+        upload_json(client, BUCKET, f"/api-football-data/times/season={season}/ingested_at={ingested_at}/times.json", teams)
 
+        time.sleep(SECONDS_BETWEEN_CALLS)
+
+    logger.info("extracao concluida")
 
 if __name__ == "__main__":
     run()
