@@ -1,9 +1,14 @@
 import argparse
 import os
 import psycopg2
+import logging
 from datetime import datetime, timezone
 
-from load_raw_to_postgres import get_minio_client, read_json, read_bytes
+from minio_client import get_minio_client, read_json, read_bytes
+
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %[%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
 
 def read_postgres_password():
     with open(os.environ["POSTGRES_PASSWORD_FILE"]) as f:
@@ -34,6 +39,8 @@ def run(args):
 
     try:
         ensure_tables(conn)
+        logger.info("Data definition languege executed")
+
     finally:
         conn.close()
 

@@ -5,7 +5,7 @@ import json
 from botocore.client import Config
 
 def get_minio_client(): 
-    endpoint_url = os.environ["MINIO_ENDPOINT_URL"]
+    endpoint_url = os.environ["MINIO_ENDPOINT"]
     return boto3.client(
         "s3",
         endpoint_url=f"http://{endpoint_url}",
