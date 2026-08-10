@@ -2,7 +2,7 @@ services:
  
   postgres:
     image: postgres:16-alpine
-    container_name: postgree_data_eng
+    container_name: postgres_data_eng
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password

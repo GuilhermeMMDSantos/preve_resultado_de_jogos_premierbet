@@ -7,7 +7,11 @@ from datetime import datetime, timezone
 from minio_client import get_minio_client, read_json, read_bytes
 
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %[%(levelname)s] %(message)s")
+
+BUCKET = "raw"
+SEASON = [2024, 2025]
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 def read_postgres_password():
@@ -31,15 +35,21 @@ def ensure_tables(conn):
         cur.execute(ddl)
     conn.commit()
 
+def load_matches(minio_client, conn, season, ingested_at):
+    json_matches = read_json(minio_client, BUCKET, f"/api-football-data/matches/season={season}/ingested_at={ingested_at}/matches.json")
+    
+  
 
-def run(args):
+def run(ingested_at):
 
     minio_client = get_minio_client()
     conn = connect()
 
     try:
         ensure_tables(conn)
-        logger.info("Data definition languege executed")
+        for season in SEASON:
+            load_matches(minio_client, conn, season, ingested_at)
+            break
 
     finally:
         conn.close()
@@ -54,4 +64,4 @@ if __name__ == "__main__":
         help="Particao da data Y-m-d a carregar"
     )
     args = parser.parse_args()
-    run(args=args.ingested_at)
+    run(ingested_at=args.ingested_at)
