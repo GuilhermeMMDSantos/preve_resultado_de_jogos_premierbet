@@ -24,6 +24,6 @@ def ensure_bucket_exists(minio_client, bucket:str):
         logger.info("Bucket %s não existe, criando...")
         minio_client.create_bucket(Bucket=bucket)
 
-def upload_csv(minio_client, bucket:str, key:str, payload: bytes):
-    minio_client.put_object(Bucket=bucket, Key=key, Body=io.BytesIO(payload), ContentType="application/json")
-    logger.info("Gravado s3://%s/%s (%d bytes) ", bucket, key, len(payload))
+def upload_csv(minio_client, bucket:str, key:str, content: bytes, content_type:str):
+    minio_client.put_object(Bucket=bucket, Key=key, Body=io.BytesIO(content), ContentType=content_type)
+    logger.info("Gravado s3://%s/%s (%d bytes) ", bucket, key, len(content))

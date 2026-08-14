@@ -7,7 +7,7 @@ from minio_client import get_minio_client, ensure_bucket_exist, upload_json
 
 MAX_RETRIES = 3
 BASE_URL = "https://api.football-data.org/v4"
-SEASONS = [2024, 2025]
+SEASONS = [2024, 2025] #na api 2024 é epoca 2024/2025 e 2025 é epoca 2025/2026
 COMPETITION = "PL"
 BUCKET = "raw"
 SECONDS_BETWEEN_CALLS = 6
