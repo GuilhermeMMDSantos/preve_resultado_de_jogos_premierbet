@@ -4,7 +4,7 @@ from minio_client import get_minio_client, ensure_bucket_exists, upload_csv
 from datetime import datetime, timezone
 import time
 
-BASE_URL = "https://www.football-data.co.uk/englandm/mmz4281"
+BASE_URL = "https://www.football-data.co.uk/mmz4281"
 SEASONS = [2425, 2526]
 BUCKET = "raw"
 DIVISION = "E0" #para premier league

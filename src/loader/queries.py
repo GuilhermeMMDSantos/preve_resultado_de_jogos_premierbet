@@ -24,3 +24,17 @@ UPSERT_TEAMS = """
         raw_json = EXCLUDED.raw_json,
         ingested_at = EXCLUDED.ingested_at
 """
+
+UPSERT_CSV_MATCHES = """
+    INSERT INTO raw.csv_matches (
+        season_code, match_date, home_team, away_team,
+        full_time_home_goals, full_time_away_goals, full_time_result,
+        raw_json, ingested_at
+    ) VALUES %s
+    ON CONFLICT (season_code, match_date, home_team, away_team) DO UPDATE SET
+        full_time_home_goals = EXCLUDED.full_time_home_goals,
+        full_time_away_goals = EXCLUDED.full_time_away_goals,
+        full_time_result = EXCLUDED.full_time_result,
+        raw_json = EXCLUDED.raw_json,
+        ingested_at = EXCLUDED.ingested_at;
+"""
