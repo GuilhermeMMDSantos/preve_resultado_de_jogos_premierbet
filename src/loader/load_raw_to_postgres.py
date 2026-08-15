@@ -5,13 +5,17 @@ import psycopg2.extras
 import logging
 from datetime import datetime, timezone
 import json
+import pandas as pd
+import io
 
 from minio_client import get_minio_client, read_json, read_bytes
 
-from queries import UPSERT_MATCHES, UPSERT_TEAMS
+from queries import UPSERT_MATCHES, UPSERT_TEAMS, UPSERT_CSV_MATCHES
 
 BUCKET = "raw"
 SEASON = [2024, 2025]
+SEASON_CODE = [2425, 2526]
+DIVISION = "E0"
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -84,7 +88,35 @@ def load_teams(minio_client, conn, season, ingested_at):
     conn.commit()
     logger.info("raw.teams: %d linhas (season: %d)", len(rows), season)
 
-  
+def load_matches_csv(minio_client, conn, season, ingested_at):
+    key = f"football-data-csv/season={season}/ingested_at={ingested_at}/{DIVISION}.csv"
+    data_bytes = read_bytes(minio_client, BUCKET, key)
+    df = pd.read_csv(io.BytesIO(data_bytes))
+    df = df.dropna(subset=["Date", "HomeTeam", "AwayTeam"])
+    df["Date"] = pd.to_datetime(df["Date"], dayfirst=True, errors="coerce")
+
+    rows = []
+    for _,r in df.iterrows():
+        r_dict = r.where(pd.notnull(r), None).to_dict()
+        r_dict["Date"] = r_dict["Date"].strftime("%Y-%m-%d")
+        rows.append((
+            season,
+            r["Date"].date(),
+            r["HomeTeam"],
+            r["AwayTeam"],
+            r.get("FTHG"),
+            r.get("FTAG"),
+            r.get("FTR"),
+            json.dumps(r_dict),
+            ingested_at
+        ))
+
+    with conn.cursor() as cur:
+        psycopg2.extras.execute_values(cur, UPSERT_CSV_MATCHES, rows)
+    conn.commit()
+    logger.info("raw.matches_csv: %d linhas (season %d) ", len(rows), season)
+
+
 
 def run(ingested_at):
 
@@ -96,6 +128,8 @@ def run(ingested_at):
         for season in SEASON:
             load_matches(minio_client, conn, season, ingested_at)
             load_teams(minio_client, conn, season, ingested_at)
+        for season_code in SEASON_CODE:
+            load_matches_csv(minio_client, conn, season_code, ingested_at)
     finally:
         conn.close()
     logger.info("load completa")

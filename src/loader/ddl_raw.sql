@@ -27,3 +27,16 @@ CREATE TABLE IF NOT EXISTS raw.teams (
     ingested_at DATE,
     PRIMARY KEY (team_id, season)
 );
+
+CREATE TABLE IF NOT EXISTS raw.csv_matches (
+    season_code           TEXT NOT NULL,
+    match_date             DATE NOT NULL,
+    home_team              TEXT NOT NULL,
+    away_team              TEXT NOT NULL,
+    full_time_home_goals   INT,
+    full_time_away_goals   INT,
+    full_time_result       TEXT,
+    raw_json                JSONB,
+    ingested_at             DATE,
+    PRIMARY KEY (season_code, match_date, home_team, away_team)
+);
