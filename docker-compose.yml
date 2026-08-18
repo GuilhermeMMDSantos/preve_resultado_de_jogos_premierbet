@@ -79,7 +79,24 @@ services:
       - postgres
     networks:
       - data_eng_network
-    
+
+  dbt:
+    build:
+      context: ./src/dbt
+    container_name: dbt_data_eng
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - ./src/dbt:/usr/app
+    depends_on:
+      - postgres
+    networks:
+      - data_eng_network
 
 volumes:
   postgres_data:
